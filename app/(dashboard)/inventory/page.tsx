@@ -66,13 +66,18 @@ export default function InventoryPage() {
   const [saving, setSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const [inv, mov] = await Promise.all([
-      fetch("/api/ingredients").then((r) => r.json()),
-      fetch("/api/ingredients/movements").then((r) => r.json()),
-    ]);
-    setData(inv);
-    setMovements(mov);
-    setLoading(false);
+    try {
+      const [invRes, movRes] = await Promise.all([
+        fetch("/api/ingredients"),
+        fetch("/api/ingredients/movements"),
+      ]);
+      if (invRes.ok) setData(await invRes.json());
+      if (movRes.ok) setMovements(await movRes.json());
+    } catch (e) {
+      console.error("Error cargando inventario:", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
