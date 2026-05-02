@@ -97,4 +97,4 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Table_number_key" ON "Table"("number");
+CREATE UNIQUE INDEX "Table_number_type_key" ON "Table"("number", "type");
