@@ -86,6 +86,29 @@ model InventoryMovement {
   createdAt DateTime @default(now())
 }
 
+model Ingredient {
+  id         String               @id @default(cuid())
+  name       String               @unique
+  category   String               @default("Otros")
+  stock      Float                @default(0)
+  minStock   Float                @default(1)
+  unit       String               @default("litro")
+  active     Boolean              @default(true)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  movements  IngredientMovement[]
+}
+
+model IngredientMovement {
+  id           String     @id @default(cuid())
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  type         String
+  quantity     Float
+  reason       String?
+  createdAt    DateTime   @default(now())
+}
+
 model CashRegisterCut {
   id                String   @id @default(cuid())
   date              DateTime @default(now())

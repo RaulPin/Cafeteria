@@ -106,10 +106,55 @@ export async function GET() {
     await prisma.table.create({ data: table });
   }
 
+  const ingredients = [
+    // Lácteos
+    { name: "Leche entera", category: "Lácteos", stock: 10, minStock: 3, unit: "litro" },
+    { name: "Leche descremada", category: "Lácteos", stock: 5, minStock: 2, unit: "litro" },
+    { name: "Leche de avena", category: "Lácteos", stock: 6, minStock: 2, unit: "litro" },
+    { name: "Leche de almendra", category: "Lácteos", stock: 4, minStock: 1, unit: "litro" },
+    { name: "Crema para batir", category: "Lácteos", stock: 2, minStock: 1, unit: "litro" },
+    { name: "Leche condensada", category: "Lácteos", stock: 3, minStock: 1, unit: "lata" },
+    // Café
+    { name: "Café espresso (grano)", category: "Café", stock: 3, minStock: 1, unit: "kg" },
+    { name: "Café molido", category: "Café", stock: 2, minStock: 0.5, unit: "kg" },
+    // Jarabes
+    { name: "Jarabe de vainilla", category: "Jarabes", stock: 2, minStock: 0.5, unit: "botella" },
+    { name: "Jarabe de avellana", category: "Jarabes", stock: 2, minStock: 0.5, unit: "botella" },
+    { name: "Jarabe de caramelo", category: "Jarabes", stock: 2, minStock: 0.5, unit: "botella" },
+    { name: "Jarabe frutal", category: "Jarabes", stock: 3, minStock: 1, unit: "botella" },
+    { name: "Chocolate en polvo", category: "Jarabes", stock: 1, minStock: 0.25, unit: "kg" },
+    { name: "Matcha en polvo", category: "Jarabes", stock: 0.5, minStock: 0.1, unit: "kg" },
+    { name: "Taro en polvo", category: "Jarabes", stock: 0.5, minStock: 0.1, unit: "kg" },
+    { name: "Crema de maní (PB)", category: "Jarabes", stock: 2, minStock: 0.5, unit: "kg" },
+    // Frutas
+    { name: "Limón", category: "Frutas", stock: 20, minStock: 5, unit: "pieza" },
+    { name: "Fresa", category: "Frutas", stock: 1, minStock: 0.25, unit: "kg" },
+    { name: "Mango", category: "Frutas", stock: 1, minStock: 0.25, unit: "kg" },
+    { name: "Blueberry", category: "Frutas", stock: 0.5, minStock: 0.1, unit: "kg" },
+    { name: "Plátano", category: "Frutas", stock: 10, minStock: 3, unit: "pieza" },
+    // Panadería
+    { name: "Pan para sandwich", category: "Panadería", stock: 20, minStock: 5, unit: "pieza" },
+    { name: "Croissant", category: "Panadería", stock: 15, minStock: 5, unit: "pieza" },
+    { name: "Harina", category: "Panadería", stock: 5, minStock: 1, unit: "kg" },
+    { name: "Huevo", category: "Panadería", stock: 30, minStock: 10, unit: "pieza" },
+    { name: "Mantequilla", category: "Panadería", stock: 1, minStock: 0.25, unit: "kg" },
+    { name: "Azúcar", category: "Panadería", stock: 3, minStock: 0.5, unit: "kg" },
+    // Bebidas base
+    { name: "Agua mineral/tónica", category: "Bebidas base", stock: 24, minStock: 6, unit: "pieza" },
+    { name: "Chocolate oscuro", category: "Bebidas base", stock: 1, minStock: 0.25, unit: "kg" },
+  ];
+
+  for (const ingredient of ingredients) {
+    const created = await prisma.ingredient.create({ data: ingredient });
+    await prisma.ingredientMovement.create({
+      data: { ingredientId: created.id, type: "in", quantity: ingredient.stock, reason: "Stock inicial" },
+    });
+  }
+
   return NextResponse.json({
     message: "✅ Base de datos de Taza Mia inicializada correctamente",
     credentials: { email: "admin@cafeteria.com", password: "admin123" },
     productos: products.length,
-    categorias: categories.length,
+    insumos: ingredients.length,
   });
 }
