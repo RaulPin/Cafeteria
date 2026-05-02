@@ -34,7 +34,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Coffee className="h-8 w-8 text-amber-300" />
           <div>
-            <h1 className="font-bold text-lg leading-tight">Cafetería</h1>
+            <h1 className="font-bold text-lg leading-tight">Taza Mia</h1>
             <p className="text-amber-300 text-xs">Sistema de gestión</p>
           </div>
         </div>

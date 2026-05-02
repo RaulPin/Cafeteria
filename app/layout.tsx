@@ -9,8 +9,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Cafetería - Sistema de Gestión",
-  description: "Sistema de gestión para cafetería",
+  title: "Taza Mia - Sistema de Gestión",
+  description: "Sistema de gestión Taza Mia",
 };
 
 export default function RootLayout({

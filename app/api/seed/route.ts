@@ -14,11 +14,12 @@ export async function GET() {
   });
 
   const categories = [
-    { name: "Bebidas de café", color: "#92400E" },
-    { name: "Soda italiana", color: "#7C3AED" },
-    { name: "Té", color: "#166534" },
-    { name: "Alimentos", color: "#DC2626" },
+    { name: "Bebidas Frías", color: "#1D4ED8" },
+    { name: "Bebidas Calientes", color: "#92400E" },
+    { name: "Desayunos", color: "#DC2626" },
+    { name: "Comidas", color: "#166534" },
     { name: "Postres", color: "#DB2777" },
+    { name: "Extras", color: "#7C3AED" },
   ];
 
   const createdCats: Record<string, string> = {};
@@ -28,28 +29,64 @@ export async function GET() {
   }
 
   const products = [
-    { name: "Espresso", price: 35, categoryId: createdCats["Bebidas de café"], stock: 100, minStock: 20, unit: "pieza" },
-    { name: "Americano", price: 40, categoryId: createdCats["Bebidas de café"], stock: 100, minStock: 20, unit: "pieza" },
-    { name: "Cappuccino", price: 55, categoryId: createdCats["Bebidas de café"], stock: 80, minStock: 15, unit: "pieza" },
-    { name: "Latte", price: 60, categoryId: createdCats["Bebidas de café"], stock: 80, minStock: 15, unit: "pieza" },
-    { name: "Frappé de café", price: 75, categoryId: createdCats["Bebidas de café"], stock: 60, minStock: 10, unit: "pieza" },
-    { name: "Café de olla", price: 40, categoryId: createdCats["Bebidas de café"], stock: 50, minStock: 10, unit: "pieza" },
-    { name: "Soda italiana fresa", price: 50, categoryId: createdCats["Soda italiana"], stock: 60, minStock: 10, unit: "pieza" },
-    { name: "Soda italiana limón", price: 50, categoryId: createdCats["Soda italiana"], stock: 60, minStock: 10, unit: "pieza" },
-    { name: "Soda italiana mango", price: 55, categoryId: createdCats["Soda italiana"], stock: 60, minStock: 10, unit: "pieza" },
-    { name: "Soda italiana maracuyá", price: 55, categoryId: createdCats["Soda italiana"], stock: 60, minStock: 10, unit: "pieza" },
-    { name: "Té verde", price: 40, categoryId: createdCats["Té"], stock: 80, minStock: 15, unit: "pieza" },
-    { name: "Té negro", price: 40, categoryId: createdCats["Té"], stock: 80, minStock: 15, unit: "pieza" },
-    { name: "Té de manzanilla", price: 35, categoryId: createdCats["Té"], stock: 80, minStock: 15, unit: "pieza" },
-    { name: "Té chai", price: 55, categoryId: createdCats["Té"], stock: 50, minStock: 10, unit: "pieza" },
-    { name: "Sandwich de pollo", price: 80, categoryId: createdCats["Alimentos"], stock: 30, minStock: 5, unit: "pieza" },
-    { name: "Tostadas con aguacate", price: 70, categoryId: createdCats["Alimentos"], stock: 25, minStock: 5, unit: "pieza" },
-    { name: "Quiche del día", price: 65, categoryId: createdCats["Alimentos"], stock: 20, minStock: 3, unit: "pieza" },
-    { name: "Ensalada César", price: 90, categoryId: createdCats["Alimentos"], stock: 15, minStock: 3, unit: "pieza" },
-    { name: "Brownie de chocolate", price: 45, categoryId: createdCats["Postres"], stock: 25, minStock: 5, unit: "pieza" },
-    { name: "Cheesecake de frutos rojos", price: 60, categoryId: createdCats["Postres"], stock: 15, minStock: 3, unit: "pieza" },
-    { name: "Muffin de arándano", price: 40, categoryId: createdCats["Postres"], stock: 20, minStock: 4, unit: "pieza" },
-    { name: "Macarons (3 piezas)", price: 65, categoryId: createdCats["Postres"], stock: 30, minStock: 5, unit: "paquete" },
+    // Bebidas Frías
+    { name: "Latte Frío", price: 75, categoryId: createdCats["Bebidas Frías"], stock: 100, minStock: 10, unit: "pieza" },
+    { name: "Caramel Latte Frío", price: 80, categoryId: createdCats["Bebidas Frías"], stock: 100, minStock: 10, unit: "pieza" },
+    { name: "Moka Oscuro Frío", price: 80, categoryId: createdCats["Bebidas Frías"], stock: 100, minStock: 10, unit: "pieza" },
+    { name: "Espresso Tonic", price: 75, categoryId: createdCats["Bebidas Frías"], stock: 100, minStock: 10, unit: "pieza" },
+    { name: "Americano/Long Black Frío", price: 55, categoryId: createdCats["Bebidas Frías"], stock: 100, minStock: 10, unit: "pieza" },
+    { name: "Soda Italiana", price: 60, categoryId: createdCats["Bebidas Frías"], stock: 80, minStock: 10, unit: "pieza" },
+    { name: "Chocolate Frío", price: 70, categoryId: createdCats["Bebidas Frías"], stock: 80, minStock: 10, unit: "pieza" },
+    { name: "Taro Frío", price: 70, categoryId: createdCats["Bebidas Frías"], stock: 80, minStock: 10, unit: "pieza" },
+    { name: "Matcha Frío", price: 70, categoryId: createdCats["Bebidas Frías"], stock: 80, minStock: 10, unit: "pieza" },
+
+    // Bebidas Calientes
+    { name: "Espresso", price: 30, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Espresso Macchiato", price: 45, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Cortado", price: 50, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Americano/Long Black Caliente", price: 55, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Cappuccino", price: 65, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Flat White", price: 65, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Matcha Caliente", price: 65, categoryId: createdCats["Bebidas Calientes"], stock: 80, minStock: 10, unit: "pieza" },
+    { name: "Taro Caliente", price: 65, categoryId: createdCats["Bebidas Calientes"], stock: 80, minStock: 10, unit: "pieza" },
+    { name: "Latte Caliente", price: 70, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Moka Oscuro Caliente", price: 75, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Caramel Latte Caliente", price: 75, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Salted Caramel", price: 75, categoryId: createdCats["Bebidas Calientes"], stock: 100, minStock: 15, unit: "pieza" },
+    { name: "Chocolate Caliente", price: 65, categoryId: createdCats["Bebidas Calientes"], stock: 80, minStock: 10, unit: "pieza" },
+
+    // Desayunos
+    { name: "French Toast", price: 78, categoryId: createdCats["Desayunos"], stock: 30, minStock: 5, unit: "pieza" },
+    { name: "Waffles Sencillos", price: 75, categoryId: createdCats["Desayunos"], stock: 30, minStock: 5, unit: "pieza" },
+    { name: "Waffles con Toppings", price: 90, categoryId: createdCats["Desayunos"], stock: 30, minStock: 5, unit: "pieza" },
+    { name: "Croque Madame", price: 120, categoryId: createdCats["Desayunos"], stock: 20, minStock: 3, unit: "pieza" },
+    { name: "Crepas", price: 75, categoryId: createdCats["Desayunos"], stock: 25, minStock: 5, unit: "pieza" },
+    { name: "Croissant Salado (Desayuno)", price: 90, categoryId: createdCats["Desayunos"], stock: 20, minStock: 5, unit: "pieza" },
+
+    // Comidas
+    { name: "Sandwich Clásico", price: 80, categoryId: createdCats["Comidas"], stock: 20, minStock: 3, unit: "pieza" },
+    { name: "Croissant Salado", price: 90, categoryId: createdCats["Comidas"], stock: 20, minStock: 3, unit: "pieza" },
+    { name: "Croque Monsieur", price: 115, categoryId: createdCats["Comidas"], stock: 15, minStock: 3, unit: "pieza" },
+
+    // Postres
+    { name: "Galletas Estilo NY", price: 55, categoryId: createdCats["Postres"], stock: 30, minStock: 5, unit: "pieza" },
+    { name: "Brownies Nevados", price: 65, categoryId: createdCats["Postres"], stock: 25, minStock: 5, unit: "pieza" },
+    { name: "Muffin de Plátano con Chispas", price: 20, categoryId: createdCats["Postres"], stock: 25, minStock: 5, unit: "pieza" },
+    { name: "Croissant de Fresas con Crema", price: 70, categoryId: createdCats["Postres"], stock: 20, minStock: 3, unit: "pieza" },
+    { name: "Conchas de Masa Madre", price: 25, categoryId: createdCats["Postres"], stock: 20, minStock: 5, unit: "pieza" },
+    { name: "Ladies de Cajeta / Ate-Queso Crema", price: 20, categoryId: createdCats["Postres"], stock: 20, minStock: 5, unit: "pieza" },
+    { name: "Roles de Canela", price: 50, categoryId: createdCats["Postres"], stock: 15, minStock: 3, unit: "pieza" },
+    { name: "Pay de Queso", price: 80, categoryId: createdCats["Postres"], stock: 15, minStock: 3, unit: "pieza" },
+
+    // Extras
+    { name: "Extra Vainilla", price: 15, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Extra Avellana", price: 15, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Extra Crema de Maní (PB)", price: 15, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Extra Jarabe Frutal", price: 15, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Extra Chocolate", price: 20, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Extra Caramelo", price: 20, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Leche de Avena", price: 15, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
+    { name: "Extra Espresso", price: 30, categoryId: createdCats["Extras"], stock: 100, minStock: 20, unit: "pieza" },
   ];
 
   for (const product of products) {
@@ -70,7 +107,9 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    message: "✅ Base de datos inicializada correctamente",
+    message: "✅ Base de datos de Taza Mia inicializada correctamente",
     credentials: { email: "admin@cafeteria.com", password: "admin123" },
+    productos: products.length,
+    categorias: categories.length,
   });
 }
