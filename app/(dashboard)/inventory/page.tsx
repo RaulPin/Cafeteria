@@ -122,9 +122,10 @@ export default function InventoryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
+      let data: { error?: string } = {};
+      try { data = await res.json(); } catch { /* non-JSON response */ }
       if (!res.ok) {
-        setFormError(data.error ?? "Error al guardar el insumo");
+        setFormError(data.error ?? `Error del servidor (${res.status})`);
       } else {
         setAddDialog(false);
         setFormError("");
@@ -132,7 +133,7 @@ export default function InventoryPage() {
         fetchData();
       }
     } catch {
-      setFormError("Error de conexión. Intenta de nuevo.");
+      setFormError("Error de red. Verifica que el servidor esté corriendo.");
     }
     setSaving(false);
   }
@@ -148,16 +149,17 @@ export default function InventoryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: form.name, category: form.category, minStock: form.minStock, unit: form.unit }),
       });
-      const data = await res.json();
+      let data: { error?: string } = {};
+      try { data = await res.json(); } catch { /* non-JSON response */ }
       if (!res.ok) {
-        setFormError(data.error ?? "Error al guardar");
+        setFormError(data.error ?? `Error del servidor (${res.status})`);
       } else {
         setEditDialog(false);
         setFormError("");
         fetchData();
       }
     } catch {
-      setFormError("Error de conexión. Intenta de nuevo.");
+      setFormError("Error de red. Verifica que el servidor esté corriendo.");
     }
     setSaving(false);
   }
