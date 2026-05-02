@@ -64,6 +64,7 @@ export default function InventoryPage() {
   const [form, setForm] = useState({ name: "", category: "Lácteos", stock: "0", minStock: "1", unit: "litro" });
   const [editTarget, setEditTarget] = useState<Ingredient | null>(null);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const fetchData = useCallback(async () => {
     try {
@@ -113,27 +114,51 @@ export default function InventoryPage() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    setFormError("");
     setSaving(true);
-    const res = await fetch("/api/ingredients", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (res.ok) { setAddDialog(false); setForm({ name: "", category: "Lácteos", stock: "0", minStock: "1", unit: "litro" }); fetchData(); }
+    try {
+      const res = await fetch("/api/ingredients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error ?? "Error al guardar el insumo");
+      } else {
+        setAddDialog(false);
+        setFormError("");
+        setForm({ name: "", category: "Lácteos", stock: "0", minStock: "1", unit: "litro" });
+        fetchData();
+      }
+    } catch {
+      setFormError("Error de conexión. Intenta de nuevo.");
+    }
     setSaving(false);
   }
 
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editTarget) return;
+    setFormError("");
     setSaving(true);
-    await fetch(`/api/ingredients/${editTarget.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: form.name, category: form.category, minStock: form.minStock, unit: form.unit }),
-    });
-    setEditDialog(false);
-    fetchData();
+    try {
+      const res = await fetch(`/api/ingredients/${editTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, category: form.category, minStock: form.minStock, unit: form.unit }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error ?? "Error al guardar");
+      } else {
+        setEditDialog(false);
+        setFormError("");
+        fetchData();
+      }
+    } catch {
+      setFormError("Error de conexión. Intenta de nuevo.");
+    }
     setSaving(false);
   }
 
@@ -354,7 +379,7 @@ export default function InventoryPage() {
       </Dialog>
 
       {/* Add Ingredient Dialog */}
-      <Dialog open={addDialog} onOpenChange={setAddDialog}>
+      <Dialog open={addDialog} onOpenChange={(open) => { setAddDialog(open); if (!open) setFormError(""); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nuevo insumo</DialogTitle>
@@ -390,8 +415,11 @@ export default function InventoryPage() {
                 <Input type="number" min="0" step="0.01" value={form.minStock} onChange={(e) => setForm({ ...form, minStock: e.target.value })} />
               </div>
             </div>
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-3 py-2 text-sm">{formError}</div>
+            )}
             <div className="flex gap-3">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setAddDialog(false)}>Cancelar</Button>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => { setAddDialog(false); setFormError(""); }}>Cancelar</Button>
               <Button type="submit" className="flex-1" disabled={saving}>{saving ? "Guardando..." : "Agregar insumo"}</Button>
             </div>
           </form>
@@ -399,7 +427,7 @@ export default function InventoryPage() {
       </Dialog>
 
       {/* Edit Ingredient Dialog */}
-      <Dialog open={editDialog} onOpenChange={setEditDialog}>
+      <Dialog open={editDialog} onOpenChange={(open) => { setEditDialog(open); if (!open) setFormError(""); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar insumo</DialogTitle>
@@ -429,8 +457,11 @@ export default function InventoryPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo para alerta</label>
               <Input type="number" min="0" step="0.01" value={form.minStock} onChange={(e) => setForm({ ...form, minStock: e.target.value })} />
             </div>
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-3 py-2 text-sm">{formError}</div>
+            )}
             <div className="flex gap-3">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setEditDialog(false)}>Cancelar</Button>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => { setEditDialog(false); setFormError(""); }}>Cancelar</Button>
               <Button type="submit" className="flex-1" disabled={saving}>{saving ? "Guardando..." : "Guardar cambios"}</Button>
             </div>
           </form>
