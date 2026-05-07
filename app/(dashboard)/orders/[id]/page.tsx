@@ -64,9 +64,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState("");
+  const [cart, setCart] = useState<Record<string, { product: Product; quantity: number }>>({});
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
   const [processing, setProcessing] = useState(false);
 
@@ -93,23 +91,52 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     return matchCat && matchSearch;
   });
 
-  async function handleAddItem(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedProduct) return;
+  function cartAdd(product: Product) {
+    setCart((prev) => {
+      const existing = prev[product.id];
+      const newQty = (existing?.quantity ?? 0) + 1;
+      if (newQty > product.stock) return prev;
+      return { ...prev, [product.id]: { product, quantity: newQty } };
+    });
+  }
+
+  function cartRemove(productId: string) {
+    setCart((prev) => {
+      const existing = prev[productId];
+      if (!existing) return prev;
+      if (existing.quantity <= 1) {
+        const next = { ...prev };
+        delete next[productId];
+        return next;
+      }
+      return { ...prev, [productId]: { ...existing, quantity: existing.quantity - 1 } };
+    });
+  }
+
+  function cartReset() {
+    setCart({});
+    setSearch("");
+    setSelectedCategory("all");
+  }
+
+  const cartItems = Object.values(cart);
+  const cartTotal = cartItems.reduce((sum, { product, quantity }) => sum + product.price * quantity, 0);
+  const cartCount = cartItems.reduce((sum, { quantity }) => sum + quantity, 0);
+
+  async function handleAddItems() {
+    if (cartItems.length === 0) return;
     setProcessing(true);
-    const res = await fetch(`/api/orders/${id}/items`, {
+    const res = await fetch(`/api/orders/${id}/items/bulk`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: selectedProduct.id, quantity, notes }),
+      body: JSON.stringify({ items: cartItems.map(({ product, quantity }) => ({ productId: product.id, quantity })) }),
     });
     const data = await res.json();
     if (!res.ok) {
       alert(data.error);
     } else {
       setAddDialogOpen(false);
-      setSelectedProduct(null);
-      setQuantity(1);
-      setNotes("");
+      cartReset();
       fetchOrder();
     }
     setProcessing(false);
@@ -239,11 +266,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       )}
 
       {/* Add Product Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+      <Dialog open={addDialogOpen} onOpenChange={(open) => { setAddDialogOpen(open); if (!open) cartReset(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Agregar producto</DialogTitle>
+            <DialogTitle>Agregar productos</DialogTitle>
           </DialogHeader>
+
           <div className="flex gap-2 mt-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -255,7 +283,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               />
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap mt-2">
+
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setSelectedCategory("all")}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedCategory === "all" ? "bg-amber-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
@@ -273,65 +302,71 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
 
-          {selectedProduct ? (
-            <form onSubmit={handleAddItem} className="space-y-4 mt-2">
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="font-medium">{selectedProduct.name}</p>
-                <p className="text-sm text-gray-600">{formatCurrency(selectedProduct.price)} · Stock: {selectedProduct.stock} {selectedProduct.unit}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-                  <Input
-                    type="number"
-                    min={0.5}
-                    step={0.5}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notas (opcional)</label>
-                  <Input
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Sin azúcar, extra..."
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => setSelectedProduct(null)}>
-                  Volver
-                </Button>
-                <Button type="submit" className="flex-1" disabled={processing}>
-                  {processing ? "Agregando..." : `Agregar · ${formatCurrency(selectedProduct.price * quantity)}`}
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <div className="overflow-y-auto flex-1 mt-2">
-              {filteredProducts.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">Sin productos</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {filteredProducts.map((product) => (
-                    <button
+          <div className="overflow-y-auto flex-1">
+            {filteredProducts.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">Sin productos</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {filteredProducts.map((product) => {
+                  const inCart = cart[product.id]?.quantity ?? 0;
+                  const outOfStock = product.stock <= 0;
+                  return (
+                    <div
                       key={product.id}
-                      onClick={() => { setSelectedProduct(product); setQuantity(1); }}
-                      disabled={product.stock <= 0}
-                      className="p-3 rounded-lg border border-gray-200 text-left hover:border-amber-400 hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`p-3 rounded-lg border-2 transition-colors ${inCart > 0 ? "border-amber-400 bg-amber-50" : "border-gray-200"} ${outOfStock ? "opacity-50" : ""}`}
                     >
-                      <p className="font-medium text-sm">{product.name}</p>
+                      <p className="font-medium text-sm leading-tight">{product.name}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{product.category.name}</p>
                       <p className="text-sm font-bold text-amber-700 mt-1">{formatCurrency(product.price)}</p>
-                      <p className="text-xs text-gray-400">Stock: {product.stock} {product.unit}</p>
-                    </button>
-                  ))}
-                </div>
-              )}
+                      <div className="flex items-center justify-between mt-2">
+                        {inCart > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => cartRemove(product.id)}
+                              className="h-7 w-7 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-700 hover:bg-gray-100 font-bold text-base leading-none"
+                            >
+                              −
+                            </button>
+                            <span className="font-bold text-amber-700 min-w-[20px] text-center">{inCart}</span>
+                            <button
+                              onClick={() => cartAdd(product)}
+                              disabled={inCart >= product.stock}
+                              className="h-7 w-7 rounded-full bg-amber-700 text-white flex items-center justify-center hover:bg-amber-800 disabled:opacity-40 font-bold text-base leading-none"
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => cartAdd(product)}
+                            disabled={outOfStock}
+                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-700 text-white text-xs font-medium hover:bg-amber-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Plus className="h-3 w-3" /> Agregar
+                          </button>
+                        )}
+                        <span className="text-xs text-gray-400">{product.stock} disp.</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Cart summary bar */}
+          <div className={`border-t pt-3 transition-all ${cartItems.length > 0 ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600">{cartCount} producto(s) seleccionado(s)</span>
+              <span className="font-bold text-amber-700">{formatCurrency(cartTotal)}</span>
             </div>
-          )}
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={cartReset}>Limpiar</Button>
+              <Button className="flex-1" onClick={handleAddItems} disabled={processing || cartItems.length === 0}>
+                {processing ? "Agregando..." : `Agregar ${cartCount > 0 ? cartCount : ""} a la orden`}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
