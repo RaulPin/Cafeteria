@@ -7,15 +7,20 @@ export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { searchParams } = new URL(req.url);
-  const activeOnly = searchParams.get("active") === "true";
+  try {
+    const { searchParams } = new URL(req.url);
+    const activeOnly = searchParams.get("active") === "true";
 
-  const products = await prisma.product.findMany({
-    where: activeOnly ? { active: true } : undefined,
-    include: { category: true },
-    orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
-  });
-  return NextResponse.json(products);
+    const products = await prisma.product.findMany({
+      where: activeOnly ? { active: true } : undefined,
+      include: { category: true },
+      orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
+    });
+    return NextResponse.json(products);
+  } catch (e) {
+    console.error("GET /api/products error:", e);
+    return NextResponse.json({ error: "Error al obtener productos" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {

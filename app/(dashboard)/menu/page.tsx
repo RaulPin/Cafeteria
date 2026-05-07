@@ -53,13 +53,18 @@ export default function MenuPage() {
   const [saving, setSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const [prods, cats] = await Promise.all([
-      fetch("/api/products").then((r) => r.json()),
-      fetch("/api/categories").then((r) => r.json()),
-    ]);
-    setProducts(prods);
-    setCategories(cats);
-    setLoading(false);
+    try {
+      const [prodsRes, catsRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/categories"),
+      ]);
+      if (prodsRes.ok) setProducts(await prodsRes.json());
+      if (catsRes.ok) setCategories(await catsRes.json());
+    } catch (e) {
+      console.error("Error cargando menú:", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);

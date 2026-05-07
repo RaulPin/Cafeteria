@@ -7,11 +7,16 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const categories = await prisma.category.findMany({
-    include: { _count: { select: { products: true } } },
-    orderBy: { name: "asc" },
-  });
-  return NextResponse.json(categories);
+  try {
+    const categories = await prisma.category.findMany({
+      include: { _count: { select: { products: true } } },
+      orderBy: { name: "asc" },
+    });
+    return NextResponse.json(categories);
+  } catch (e) {
+    console.error("GET /api/categories error:", e);
+    return NextResponse.json({ error: "Error al obtener categorías" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
