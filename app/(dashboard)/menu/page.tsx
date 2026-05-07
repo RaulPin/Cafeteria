@@ -51,17 +51,29 @@ export default function MenuPage() {
   const [form, setForm] = useState({ name: "", price: "", categoryId: "", minStock: "5", unit: "unidad" });
   const [catForm, setCatForm] = useState({ name: "", color: "#92400E" });
   const [saving, setSaving] = useState(false);
+  const [fetchError, setFetchError] = useState("");
 
   const fetchData = useCallback(async () => {
+    setFetchError("");
     try {
       const [prodsRes, catsRes] = await Promise.all([
         fetch("/api/products"),
         fetch("/api/categories"),
       ]);
-      if (prodsRes.ok) setProducts(await prodsRes.json());
-      if (catsRes.ok) setCategories(await catsRes.json());
+      if (prodsRes.ok) {
+        setProducts(await prodsRes.json());
+      } else {
+        const d = await prodsRes.json().catch(() => ({}));
+        setFetchError(`Error productos (${prodsRes.status}): ${d.error ?? "desconocido"}`);
+      }
+      if (catsRes.ok) {
+        setCategories(await catsRes.json());
+      } else {
+        const d = await catsRes.json().catch(() => ({}));
+        setFetchError((prev) => prev + ` | Error categorías (${catsRes.status}): ${d.error ?? "desconocido"}`);
+      }
     } catch (e) {
-      console.error("Error cargando menú:", e);
+      setFetchError("Error de red: " + String(e));
     } finally {
       setLoading(false);
     }
@@ -133,6 +145,9 @@ export default function MenuPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm font-mono">{fetchError}</div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Menú</h1>
