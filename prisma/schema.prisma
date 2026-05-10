@@ -116,6 +116,18 @@ model CashRegisterCut {
   totalCash         Float
   totalCard         Float
   totalRevenue      Float
+  totalExpenses     Float    @default(0)
   categoryBreakdown String
   createdAt         DateTime @default(now())
+}
+
+model Expense {
+  id            String   @id @default(cuid())
+  description   String
+  amount        Float
+  category      String   @default("Otros")
+  paymentMethod String   @default("cash")
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

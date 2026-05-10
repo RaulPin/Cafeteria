@@ -17,14 +17,22 @@ export async function GET(req: Request) {
   const end = new Date(date);
   end.setHours(23, 59, 59, 999);
 
-  const orders = await prisma.order.findMany({
-    where: { status: "closed", closedAt: { gte: start, lte: end } },
-    include: { table: true, items: { include: { product: { include: { category: true } } } } },
-  });
+  const [orders, expenses] = await Promise.all([
+    prisma.order.findMany({
+      where: { status: "closed", closedAt: { gte: start, lte: end } },
+      include: { table: true, items: { include: { product: { include: { category: true } } } } },
+    }),
+    prisma.expense.findMany({
+      where: { date: { gte: start, lte: end } },
+      orderBy: { date: "asc" },
+    }),
+  ]);
 
   const totalCash = orders.filter((o) => o.paymentMethod === "cash").reduce((s, o) => s + o.total, 0);
   const totalCard = orders.filter((o) => o.paymentMethod === "card").reduce((s, o) => s + o.total, 0);
   const totalRevenue = totalCash + totalCard;
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const netRevenue = totalRevenue - totalExpenses;
 
   const categoryMap: Record<string, { name: string; total: number; qty: number }> = {};
   for (const order of orders) {
@@ -53,11 +61,14 @@ export async function GET(req: Request) {
 
     summarySheet.addRow({ concept: "Fecha", value: new Date(date).toLocaleDateString("es-MX") });
     summarySheet.addRow({ concept: "Total de órdenes cerradas", value: orders.length });
-    summarySheet.addRow({ concept: "Total en efectivo", value: totalCash });
-    summarySheet.addRow({ concept: "Total con tarjeta", value: totalCard });
-    summarySheet.addRow({ concept: "TOTAL DEL DÍA", value: totalRevenue });
+    summarySheet.addRow({ concept: "Ingresos en efectivo", value: totalCash });
+    summarySheet.addRow({ concept: "Ingresos con tarjeta", value: totalCard });
+    summarySheet.addRow({ concept: "TOTAL INGRESOS", value: totalRevenue });
+    summarySheet.addRow({ concept: "Total egresos (gastos)", value: totalExpenses });
+    summarySheet.addRow({ concept: "UTILIDAD NETA", value: netRevenue });
 
     summarySheet.getRow(6).font = { bold: true };
+    summarySheet.getRow(8).font = { bold: true };
 
     const catSheet = workbook.addWorksheet("Por Categoría");
     catSheet.columns = [
@@ -95,6 +106,32 @@ export async function GET(req: Request) {
       });
     }
 
+    if (expenses.length > 0) {
+      const expSheet = workbook.addWorksheet("Gastos");
+      expSheet.columns = [
+        { header: "Descripción", key: "description", width: 35 },
+        { header: "Categoría", key: "category", width: 18 },
+        { header: "Método", key: "method", width: 15 },
+        { header: "Hora", key: "time", width: 15 },
+        { header: "Monto ($)", key: "amount", width: 15 },
+      ];
+      const expHeader = expSheet.getRow(1);
+      expHeader.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      expHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDC2626" } };
+      for (const exp of expenses) {
+        expSheet.addRow({
+          description: exp.description,
+          category: exp.category,
+          method: exp.paymentMethod === "cash" ? "Efectivo" : "Tarjeta",
+          time: new Date(exp.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
+          amount: exp.amount,
+        });
+      }
+      expSheet.addRow({});
+      const totalRow = expSheet.addRow({ description: "TOTAL GASTOS", amount: totalExpenses });
+      totalRow.font = { bold: true };
+    }
+
     const buffer = await workbook.xlsx.writeBuffer();
     return new NextResponse(buffer, {
       headers: {
@@ -104,7 +141,7 @@ export async function GET(req: Request) {
     });
   }
 
-  return NextResponse.json({ date, totalOrders: orders.length, totalCash, totalCard, totalRevenue, categoryBreakdown, orders });
+  return NextResponse.json({ date, totalOrders: orders.length, totalCash, totalCard, totalRevenue, totalExpenses, netRevenue, categoryBreakdown, expenses, orders });
 }
 
 export async function POST(req: Request) {
@@ -119,13 +156,17 @@ export async function POST(req: Request) {
   const end = new Date(targetDate);
   end.setHours(23, 59, 59, 999);
 
-  const orders = await prisma.order.findMany({
-    where: { status: "closed", closedAt: { gte: start, lte: end } },
-    include: { items: { include: { product: { include: { category: true } } } } },
-  });
+  const [orders, dayExpenses] = await Promise.all([
+    prisma.order.findMany({
+      where: { status: "closed", closedAt: { gte: start, lte: end } },
+      include: { items: { include: { product: { include: { category: true } } } } },
+    }),
+    prisma.expense.findMany({ where: { date: { gte: start, lte: end } } }),
+  ]);
 
   const totalCash = orders.filter((o) => o.paymentMethod === "cash").reduce((s, o) => s + o.total, 0);
   const totalCard = orders.filter((o) => o.paymentMethod === "card").reduce((s, o) => s + o.total, 0);
+  const totalExpenses = dayExpenses.reduce((s, e) => s + e.amount, 0);
 
   const categoryMap: Record<string, { name: string; total: number; qty: number }> = {};
   for (const order of orders) {
@@ -144,6 +185,7 @@ export async function POST(req: Request) {
       totalCash,
       totalCard,
       totalRevenue: totalCash + totalCard,
+      totalExpenses,
       categoryBreakdown: JSON.stringify(Object.values(categoryMap)),
     },
   });

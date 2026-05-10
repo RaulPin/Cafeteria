@@ -11,6 +11,7 @@ import {
   BarChart3,
   LogOut,
   UtensilsCrossed,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/orders", label: "Órdenes", icon: ClipboardList },
   { href: "/menu", label: "Menú", icon: Coffee },
   { href: "/inventory", label: "Inventario", icon: Package },
+  { href: "/expenses", label: "Gastos", icon: Receipt },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
 ];
 
