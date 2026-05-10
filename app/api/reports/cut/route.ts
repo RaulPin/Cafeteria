@@ -12,10 +12,9 @@ export async function GET(req: Request) {
   const date = searchParams.get("date") ?? new Date().toISOString().split("T")[0];
   const format = searchParams.get("format") ?? "json";
 
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(date);
-  end.setHours(23, 59, 59, 999);
+  const [y, m, d] = date.split("-").map(Number);
+  const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+  const end = new Date(y, m - 1, d, 23, 59, 59, 999);
 
   const [orders, expenses] = await Promise.all([
     prisma.order.findMany({
@@ -151,10 +150,9 @@ export async function POST(req: Request) {
   const { date } = await req.json();
   const targetDate = date ?? new Date().toISOString().split("T")[0];
 
-  const start = new Date(targetDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(targetDate);
-  end.setHours(23, 59, 59, 999);
+  const [y2, m2, d2] = targetDate.split("-").map(Number);
+  const start = new Date(y2, m2 - 1, d2, 0, 0, 0, 0);
+  const end = new Date(y2, m2 - 1, d2, 23, 59, 59, 999);
 
   const [orders, dayExpenses] = await Promise.all([
     prisma.order.findMany({

@@ -11,14 +11,16 @@ export async function GET(req: Request) {
   const date = searchParams.get("date");
 
   try {
-    const where = date
-      ? {
-          date: {
-            gte: new Date(date + "T00:00:00.000Z"),
-            lte: new Date(date + "T23:59:59.999Z"),
-          },
-        }
-      : undefined;
+    let where = undefined;
+    if (date) {
+      const [y, m, d] = date.split("-").map(Number);
+      where = {
+        date: {
+          gte: new Date(y, m - 1, d, 0, 0, 0, 0),
+          lte: new Date(y, m - 1, d, 23, 59, 59, 999),
+        },
+      };
+    }
 
     const expenses = await prisma.expense.findMany({
       where,
