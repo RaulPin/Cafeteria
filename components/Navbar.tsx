@@ -12,11 +12,19 @@ import {
   LogOut,
   UtensilsCrossed,
   Receipt,
+  Users,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
-const navItems = [
+const baristaItems = [
+  { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+  { href: "/tables", label: "Mesas", icon: UtensilsCrossed },
+  { href: "/orders", label: "Órdenes", icon: ClipboardList },
+];
+
+const adminItems = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
   { href: "/tables", label: "Mesas", icon: UtensilsCrossed },
   { href: "/orders", label: "Órdenes", icon: ClipboardList },
@@ -24,11 +32,15 @@ const navItems = [
   { href: "/inventory", label: "Inventario", icon: Package },
   { href: "/expenses", label: "Gastos", icon: Receipt },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
+  { href: "/users", label: "Usuarios", icon: Users },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role ?? "user";
+  const isAdmin = role === "admin";
+  const navItems = isAdmin ? adminItems : baristaItems;
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-amber-900 text-white flex flex-col z-40">
@@ -42,7 +54,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
@@ -67,7 +79,11 @@ export default function Navbar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{session?.user?.name}</p>
-            <p className="text-xs text-amber-300">Administrador</p>
+            <p className="text-xs text-amber-300 flex items-center gap-1">
+              {isAdmin
+                ? <><ShieldCheck className="h-3 w-3" /> Administrador</>
+                : "Barista"}
+            </p>
           </div>
         </div>
         <Button
