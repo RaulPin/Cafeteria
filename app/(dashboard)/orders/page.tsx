@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { ClipboardList, Eye } from "lucide-react";
+import { ClipboardList, Eye, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface Order {
@@ -21,17 +22,32 @@ interface Order {
 
 export default function OrdersPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string })?.role === "admin";
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchOrders = useCallback(() => {
+    setLoading(true);
     const params = filter !== "all" ? `?status=${filter}` : "";
     fetch(`/api/orders${params}`)
       .then((r) => r.json())
       .then(setOrders)
       .finally(() => setLoading(false));
   }, [filter]);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  async function handleDelete(order: Order) {
+    const label = order.table.type === "takeout" ? "Para llevar" : `Mesa ${order.table.number}`;
+    if (!confirm(`¿Eliminar la orden de ${label} por ${formatCurrency(order.total)}? Esta acción no se puede deshacer.`)) return;
+    setDeleting(order.id);
+    await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+    setDeleting(null);
+    fetchOrders();
+  }
 
   const filteredOrders = orders;
 
@@ -44,16 +60,19 @@ export default function OrdersPage() {
         <p className="text-gray-500 text-sm mt-1">Todas las órdenes del sistema</p>
       </div>
 
-      <div className="flex gap-2">
-        {(["all", "open", "closed"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => { setFilter(f); setLoading(true); }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === f ? "bg-amber-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-          >
-            {f === "all" ? "Todas" : f === "open" ? "Abiertas" : "Cerradas"}
-          </button>
-        ))}
+      <div className="flex gap-2 flex-wrap items-center justify-between">
+        <div className="flex gap-2">
+          {(["all", "open", "closed"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === f ? "bg-amber-700 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            >
+              {f === "all" ? "Todas" : f === "open" ? "Abiertas" : "Cerradas"}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400">{orders.length} orden(es)</p>
       </div>
 
       {filteredOrders.length === 0 ? (
@@ -93,6 +112,17 @@ export default function OrdersPage() {
                     <Button size="sm" variant="ghost" onClick={() => router.push(`/orders/${order.id}`)}>
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {isAdmin && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(order)}
+                        disabled={deleting === order.id}
+                        className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
