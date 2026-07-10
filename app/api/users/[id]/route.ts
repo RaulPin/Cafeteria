@@ -4,18 +4,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
-function isAdmin(session: Awaited<ReturnType<typeof getServerSession>>) {
-  return (session?.user as { role?: string })?.role === "admin";
+async function getAdminSession() {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as { id?: string; role?: string } | undefined;
+  return user?.role === "admin" ? user : null;
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions);
-  if (!session || !isAdmin(session)) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  }
+  const admin = await getAdminSession();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   const { id } = await params;
-  const currentUserId = (session.user as { id: string }).id;
+  const currentUserId = admin.id;
 
   try {
     const { name, email, password, role, active } = await req.json();
